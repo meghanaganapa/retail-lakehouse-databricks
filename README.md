@@ -1,6 +1,6 @@
 # Retail Sales & Inventory Lakehouse on Azure Databricks
 
-[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+[![CI](https://github.com/meghanaganapa/retail-lakehouse-databricks/actions/workflows/ci.yml/badge.svg)](https://github.com/meghanaganapa/retail-lakehouse-databricks/actions/workflows/ci.yml)
 
 An end-to-end medallion lakehouse for an e-commerce business. Orders, customers and products arrive as CDC feeds, clickstream arrives as events, and suppliers drop inventory files. The pipeline turns that into a governed star schema with sales, inventory and funnel analytics, and refuses to publish data that fails its quality gate.
 
