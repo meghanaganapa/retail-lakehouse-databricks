@@ -1,0 +1,50 @@
+# Databricks Asset Bundle: everything deployable is defined as code here.
+#   databricks bundle validate -t dev
+#   databricks bundle deploy   -t dev
+#   databricks bundle run retail_lakehouse_job -t dev
+bundle:
+  name: retail_lakehouse
+
+include:
+  - resources/*.yml
+
+# Builds the retail_lakehouse wheel that the jobs run.
+artifacts:
+  default:
+    type: whl
+    build: python -m pip wheel --no-deps --wheel-dir dist .
+    path: .
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for this environment
+    default: retail_dev
+  schema:
+    description: Schema that holds all lakehouse tables
+    default: retail
+  landing_path:
+    description: Where raw files land (a UC volume or an ADLS external location)
+    default: /Volumes/retail_dev/landing/raw
+  alert_email:
+    description: Who gets job failure alerts
+    default: data-alerts@example.com
+  schedule_pause_status:
+    description: PAUSED in dev so it does not run up costs, UNPAUSED in prod
+    default: PAUSED
+
+targets:
+  dev:
+    mode: development  # resources are prefixed with [dev <user>] and schedules are paused
+    default: true
+    workspace:
+      host: https://adb-0000000000000000.0.azuredatabricks.net  # replace with your workspace URL
+
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-0000000000000000.0.azuredatabricks.net  # replace with your workspace URL
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: retail_prod
+      landing_path: /Volumes/retail_prod/landing/raw
+      schedule_pause_status: UNPAUSED

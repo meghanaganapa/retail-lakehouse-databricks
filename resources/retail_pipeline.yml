@@ -1,0 +1,20 @@
+resources:
+  pipelines:
+    retail_lakehouse_pipeline:
+      name: retail-lakehouse-pipeline
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      continuous: false  # triggered by the job; switch to true for always-on streaming
+      channel: CURRENT
+      libraries:
+        - file:
+            path: ../pipelines/retail_pipeline.py
+      configuration:
+        bundle.sourcePath: ${workspace.file_path}/src
+        landing_path: ${var.landing_path}
+        clickstream_source: files  # set to "eventhubs" once Event Hubs is wired up
+        eventhubs.namespace: retail-events
+        eventhubs.name: clickstream
+        eventhubs.secret_scope: retail-kv
+        eventhubs.secret_key: eventhubs-connection-string

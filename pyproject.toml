@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "retail-lakehouse"
+version = "0.1.0"
+description = "Retail Sales & Inventory Lakehouse on Azure Databricks (medallion, SCD2, data quality, CI/CD)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Meghana Ganapa" }]
+license = { text = "MIT" }
+# pyspark is provided by the Databricks runtime, so it is not a hard dependency.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pyspark==4.0.1",
+    "delta-spark==4.0.0",
+    "pytest>=8",
+    "ruff>=0.6",
+]
+streaming = ["azure-eventhub>=5.11"]
+
+[project.scripts]
+generate-data = "retail_lakehouse.generate:main"
+run-pipeline = "retail_lakehouse.pipeline:main"
+quality-report = "retail_lakehouse.checks:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+extend-exclude = ["pipelines"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["B008"]

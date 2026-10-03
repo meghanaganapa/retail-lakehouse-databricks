@@ -1,0 +1,67 @@
+resources:
+  jobs:
+    # Hourly: refresh the Lakeflow pipeline, then gate on data quality.
+    retail_lakehouse_job:
+      name: retail-lakehouse-job
+      schedule:
+        quartz_cron_expression: "0 0 * * * ?"
+        timezone_id: Australia/Melbourne
+        pause_status: ${var.schedule_pause_status}
+      email_notifications:
+        on_failure:
+          - ${var.alert_email}
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: refresh_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.retail_lakehouse_pipeline.id}
+            full_refresh: false
+
+        - task_key: quality_report
+          depends_on:
+            - task_key: refresh_pipeline
+          environment_key: default
+          max_retries: 1
+          min_retry_interval_millis: 60000
+          python_wheel_task:
+            package_name: retail_lakehouse
+            entry_point: quality-report
+            parameters:
+              - --storage
+              - uc
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${var.schema}
+              - --max-staleness-hours
+              - "6"
+      environments:
+        - environment_key: default
+          spec:
+            client: "2"
+            dependencies:
+              - ../dist/*.whl
+
+    # Demo helper: drops a batch of synthetic files into the landing volume.
+    retail_demo_data:
+      name: retail-demo-data
+      parameters:
+        - name: batch
+          default: "1"
+      tasks:
+        - task_key: generate
+          environment_key: default
+          python_wheel_task:
+            package_name: retail_lakehouse
+            entry_point: generate-data
+            parameters:
+              - --out
+              - ${var.landing_path}
+              - --batch
+              - "{{job.parameters.batch}}"
+      environments:
+        - environment_key: default
+          spec:
+            client: "2"
+            dependencies:
+              - ../dist/*.whl
